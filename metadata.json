@@ -1,0 +1,7 @@
+{
+  "name": "Control Administrativo de Asistencias de Estudiantes",
+  "description": "Sistema de Control Administrativo de Asistencias de Estudiantes: Gestión de asistencia y análisis normativo institucional.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

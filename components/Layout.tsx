@@ -1,0 +1,99 @@
+import React, { useEffect, useRef } from 'react';
+import { User, LogOut, LayoutDashboard, Users, FileBarChart, Bot, ClipboardList, ClipboardCheck } from 'lucide-react';
+
+interface LayoutProps {
+  children: React.ReactNode;
+  user: any;
+  onLogout: () => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, activeTab, setActiveTab }) => {
+  const isAdmin = user.rol === 'administrador';
+  const mainRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const scrollToTop = () => {
+      if (mainRef.current) mainRef.current.scrollTop = 0;
+      window.scrollTo(0, 0);
+    };
+    scrollToTop();
+    const timeoutId = setTimeout(scrollToTop, 10);
+    return () => clearTimeout(timeoutId);
+  }, [activeTab]);
+
+  const menuItems = isAdmin 
+    ? [
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'users', label: 'Personal', icon: Users },
+        { id: 'students', label: 'Matrícula', icon: FileBarChart },
+        { id: 'attendance-report', label: 'Reportes', icon: ClipboardList },
+      ]
+    : [
+        { id: 'dashboard', label: 'Mis Clases', icon: LayoutDashboard },
+        { id: 'ai-helper', label: 'Asistente', icon: Bot },
+      ];
+
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 overflow-hidden print:block">
+      <aside className="w-full md:w-72 bg-white border-r border-slate-200 flex flex-col z-20 shadow-xl print:hidden h-auto md:h-screen">
+        <div className="p-8 flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20 shrink-0">
+            <ClipboardCheck className="text-white" size={24} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight leading-none">Control de</span>
+            <span className="text-[11px] font-black text-blue-600 uppercase tracking-tight leading-none">Asistencia</span>
+          </div>
+        </div>
+        
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {menuItems.map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl transition-all ${
+                activeTab === item.id 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20 translate-x-1' 
+                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <item.icon size={20} className={activeTab === item.id ? 'text-white' : 'text-slate-400'} />
+              <span className="font-black text-xs uppercase tracking-widest">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-6 border-t border-slate-100 space-y-4">
+          <div className="bg-slate-900 p-5 rounded-3xl flex items-center gap-3 border border-slate-800">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${user.id === 'admin-1' ? 'bg-amber-500/10 border-amber-500 text-amber-500' : 'bg-blue-600/10 border-blue-600 text-blue-500'}`}>
+              <User size={18} />
+            </div>
+            <div className="overflow-hidden text-left">
+              <p className="text-[10px] font-black text-white truncate uppercase tracking-tighter">{user.nombre} {user.apellido}</p>
+              <p className={`text-[8px] font-black uppercase tracking-[0.2em] ${user.id === 'admin-1' ? 'text-amber-500' : 'text-blue-400'}`}>
+                {user.rol}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-slate-400 hover:text-red-600 transition-all font-black text-[10px] uppercase tracking-widest"
+          >
+            <LogOut size={16} />
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      </aside>
+
+      <main ref={mainRef} className="flex-1 h-screen overflow-y-auto overflow-x-hidden bg-slate-50 relative scroll-smooth print:h-auto print:overflow-visible print:block">
+        <div className="max-w-[1400px] mx-auto p-4 md:p-10 pb-20 print:p-0">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Layout;
