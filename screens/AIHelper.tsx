@@ -102,7 +102,7 @@ const AIHelper: React.FC = () => {
               <Bot size={28} />
            </div>
            <div className="text-left">
-              <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none italic">Asistente de Control</h1>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tighter uppercase leading-none italic">Asistente Administrativo</h1>
               <p className="text-blue-600 font-bold uppercase tracking-widest text-[9px] mt-1">Análisis de Permanencia Estudiantil</p>
            </div>
         </div>
@@ -118,7 +118,7 @@ const AIHelper: React.FC = () => {
               <div className="max-w-sm space-y-4">
                 <h3 className="text-xl font-black text-slate-900 uppercase italic tracking-tighter">¿Cómo puedo ayudarle, Docente?</h3>
                 <p className="text-slate-500 text-sm italic font-medium">
-                  Puedo analizar la asistencia de su grupo, generar protocolos de citación o identificar alumnos con riesgo de abandono escolar basado en el Control Administrativo.
+                  Puedo analizar la asistencia de su grupo, generar protocolos de citación o identificar alumnos con riesgo de abandono escolar basado en los datos institucionales.
                 </p>
               </div>
               <button
@@ -126,7 +126,7 @@ const AIHelper: React.FC = () => {
                 className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-5 rounded-2xl font-black shadow-2xl shadow-blue-600/20 transition-all flex items-center gap-4 uppercase text-xs tracking-widest group"
               >
                 <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
-                Iniciar Análisis de Control
+                Iniciar Análisis Administrativo
               </button>
             </div>
           ) : (

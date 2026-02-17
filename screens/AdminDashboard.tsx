@@ -19,7 +19,6 @@ const AdminDashboard: React.FC = () => {
   });
 
   const [gradeData, setGradeData] = useState<any[]>([]);
-  const [turnGenderData, setTurnGenderData] = useState<any[]>([]);
   const [criticalStudents, setCriticalStudents] = useState<any[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
 
@@ -110,8 +109,8 @@ const AdminDashboard: React.FC = () => {
           <h2 className="text-xl font-black text-slate-900 uppercase italic tracking-tighter mb-8 flex items-center gap-3">
              <Calendar size={20} className="text-blue-600" /> Matrícula por Grado
           </h2>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-64 min-h-[256px] w-full relative">
+            <ResponsiveContainer width="100%" height="100%" minHeight={250}>
               <BarChart data={gradeData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 900}} />
