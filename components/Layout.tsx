@@ -28,12 +28,12 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, activeTab, se
         { id: 'attendance-report', label: 'Reportes', icon: ClipboardList },
       ]
     : [
-        { id: 'dashboard', label: 'Mis Clases', icon: LayoutDashboard },
-        { id: 'ai-helper', label: 'Asistente', icon: Bot },
+        { id: 'dashboard', label: 'Gestión de Asistencia', icon: LayoutDashboard },
+        { id: 'ai-helper', label: 'Asistente IA', icon: Bot },
       ];
 
   const SidebarContent = () => (
-    <>
+    <div className="flex flex-col h-full bg-white">
       <div className="p-6 md:p-8 flex items-center gap-4 shrink-0">
         <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20 shrink-0">
           <ClipboardCheck className="text-white" size={20} />
@@ -56,7 +56,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, activeTab, se
             }`}
           >
             <item.icon size={18} className={activeTab === item.id ? 'text-white' : 'text-slate-400'} />
-            <span className="font-black text-[10px] md:text-xs uppercase tracking-widest">{item.label}</span>
+            <span className="font-black text-[10px] md:text-xs uppercase tracking-widest text-left">{item.label}</span>
           </button>
         ))}
       </nav>
@@ -75,19 +75,19 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, activeTab, se
         </div>
         <button
           onClick={onLogout}
-          className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-slate-400 hover:text-red-600 transition-all font-black text-[9px] md:text-[10px] uppercase tracking-widest"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all font-black text-[10px] uppercase tracking-widest shadow-sm"
         >
           <LogOut size={16} />
           <span>Cerrar Sesión</span>
         </button>
       </div>
-    </>
+    </div>
   );
 
   return (
     <div className="h-screen flex flex-col md:flex-row bg-slate-50 overflow-hidden print:block">
       {/* Mobile Header */}
-      <div className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center shrink-0 z-30">
+      <div className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center shrink-0 z-30 no-print">
         <div className="flex items-center gap-3">
           <ClipboardCheck className="text-blue-600" size={24} />
           <span className="text-xs font-black uppercase italic tracking-tighter">Control de Asistencia</span>
@@ -99,7 +99,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, activeTab, se
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden no-print" onClick={() => setIsMobileMenuOpen(false)}>
           <div className="w-72 h-full bg-white flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
             <SidebarContent />
           </div>
@@ -107,7 +107,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout, activeTab, se
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col z-20 shadow-xl print:hidden h-screen">
+      <aside className="hidden md:flex w-72 bg-white border-r border-slate-200 flex-col z-20 shadow-xl no-print h-screen">
         <SidebarContent />
       </aside>
 

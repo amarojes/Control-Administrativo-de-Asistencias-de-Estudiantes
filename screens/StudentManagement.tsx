@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StorageService } from '../services/StorageService';
 import { Student } from '../types';
-import { Plus, Upload, Trash2, Search, UserPlus, Download, Edit2, X, Check, FileSpreadsheet, MapPin, Phone, User as UserIcon, CreditCard } from 'lucide-react';
+import { Plus, Upload, Trash2, Search, UserPlus, Download, Edit2, X, Check, FileSpreadsheet, MapPin, Phone, User as UserIcon, CreditCard, Info } from 'lucide-react';
 
 const StudentManagement: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -59,13 +59,12 @@ const StudentManagement: React.FC = () => {
   };
 
   const downloadTemplate = () => {
-    // Cabecera solicitada exactamente: Cedula Escolar/Cedula
     const headers = "NOMBRE COMPLETO;Cedula Escolar/Cedula;SEXO;GRADO;SECCION;REPRESENTANTE;TELEFONO;DIRECCION";
-    // Ejemplo con 11 dígitos (Escolar) y 8 dígitos (C.I.)
     const example = "\nJUAN ARMANDO PEREZ;11512345678;M;1;A;PEDRO PEREZ;04120000000;AV. BOLIVAR SECTOR 1" + 
                     "\nMARIA VALENTINA RIVAS;30123456;F;2;B;ELENA RIVAS;04241112233;CALLE PAEZ CASA 5";
     
-    const blob = new Blob(["\ufeff" + headers + example], { type: 'text/csv;charset=utf-8;' });
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, headers + example], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
@@ -148,15 +147,14 @@ const StudentManagement: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl overflow-hidden overflow-x-auto">
-        <table className="w-full text-left min-w-[900px] border-collapse">
+        <table className="w-full text-left min-w-[950px] border-collapse">
           <thead className="bg-slate-900 text-[9px] font-black text-blue-400 uppercase tracking-widest">
             <tr>
-              <th className="px-8 py-6 text-left">Aula</th>
-              <th className="px-8 py-6 text-left">Estudiante</th>
-              <th className="px-8 py-6 text-left">Cedula Escolar/Cedula</th>
-              <th className="px-8 py-6 text-left">Representante</th>
-              <th className="px-8 py-6 text-left">Contacto</th>
-              <th className="px-8 py-6 text-right">Gestión</th>
+              <th className="px-6 py-6 text-left">Aula</th>
+              <th className="px-6 py-6 text-left">Estudiante</th>
+              <th className="px-6 py-6 text-left">Identificación</th>
+              <th className="px-6 py-6 text-left">Representante y Contacto</th>
+              <th className="px-6 py-6 text-right">Gestión</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -168,45 +166,67 @@ const StudentManagement: React.FC = () => {
               )
               .map(student => (
               <tr key={student.id} className="hover:bg-blue-50/40 transition-colors group">
-                <td className="px-8 py-6 text-left">
-                  <div className="flex justify-start">
-                    <span className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-black text-[10px] border border-blue-100">
-                      {student.grado}° "{student.seccion}"
-                    </span>
-                  </div>
+                <td className="px-6 py-6 text-left">
+                  <span className="bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg font-black text-[10px] border border-blue-100">
+                    {student.grado}° "{student.seccion}"
+                  </span>
                 </td>
-                <td className="px-8 py-6 text-left">
+                <td className="px-6 py-6 text-left">
                   <p className="font-black text-slate-900 uppercase text-sm leading-tight">{student.nombre_completo}</p>
-                  <p className="text-[8px] font-bold text-slate-400 uppercase">{student.sexo === 'M' ? 'Masc.' : 'Fem.'}</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase mt-1">{student.sexo === 'M' ? 'MASCULINO' : 'FEMENINO'}</p>
                 </td>
-                <td className="px-8 py-6 text-left">
+                <td className="px-6 py-6 text-left">
                   <div className="flex flex-col items-start gap-1">
                      <div className="flex items-center gap-2 font-mono text-xs font-bold text-slate-700">
                         <CreditCard size={12} className="text-slate-300 shrink-0" />
                         {student.cedula_escolar}
                      </div>
                      <span className={`text-[7px] font-black px-1.5 py-0.5 rounded uppercase tracking-tighter ${student.cedula_escolar.length >= 11 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
-                        {student.cedula_escolar.length >= 11 ? 'ESCOLAR (11)' : 'C.I. (8)'}
+                        {student.cedula_escolar.length >= 11 ? 'C. ESCOLAR' : 'C. IDENTIDAD'}
                      </span>
                   </div>
                 </td>
-                <td className="px-8 py-6 text-left uppercase text-[10px] font-black text-slate-600">
-                  {student.nombre_representante || '---'}
+                <td className="px-6 py-6 text-left">
+                  <div className="space-y-1">
+                    <p className="uppercase text-[10px] font-black text-slate-900 flex items-center gap-2">
+                       <UserIcon size={12} className="text-blue-600" />
+                       {student.nombre_representante || '---'}
+                    </p>
+                    {student.telefono_contacto && (
+                      <p className="text-[9px] font-bold text-blue-600 flex items-center gap-2">
+                        <Phone size={12} /> {student.telefono_contacto}
+                      </p>
+                    )}
+                    {student.direccion && (
+                       <p className="text-[8px] text-slate-400 uppercase flex items-center gap-2 truncate max-w-[200px]">
+                         <MapPin size={10} /> {student.direccion}
+                       </p>
+                    )}
+                  </div>
                 </td>
-                <td className="px-8 py-6 text-left text-xs font-bold text-blue-600">
-                  {student.telefono_contacto || '-'}
-                </td>
-                <td className="px-8 py-6 text-right">
-                  <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => handleOpenModal(student)} className="p-2 text-slate-400 hover:text-blue-600"><Edit2 size={16} /></button>
-                    <button onClick={() => { if(confirm('¿Eliminar registro?')) { StorageService.deleteStudent(student.id); setStudents(StorageService.getStudents()); }}} className="p-2 text-slate-400 hover:text-red-600"><Trash2 size={16} /></button>
+                <td className="px-6 py-6 text-right">
+                  <div className="flex justify-end gap-2">
+                    <button 
+                      onClick={() => handleOpenModal(student)} 
+                      className="p-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all shadow-sm border border-blue-100"
+                      title="Editar Estudiante"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => { if(confirm('¿Eliminar registro?')) { StorageService.deleteStudent(student.id); setStudents(StorageService.getStudents()); }}} 
+                      className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all shadow-sm border border-red-100"
+                      title="Eliminar Estudiante"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </td>
               </tr>
             ))}
             {students.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-8 py-24 text-center">
+                <td colSpan={5} className="px-8 py-24 text-center">
                   <div className="flex flex-col items-center gap-4 text-slate-200">
                     <FileSpreadsheet size={64} strokeWidth={1} />
                     <p className="font-black uppercase italic text-sm tracking-widest">Base de Datos Institucional Vacía</p>
@@ -222,16 +242,19 @@ const StudentManagement: React.FC = () => {
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-[2.5rem] w-full max-w-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 border-4 border-white">
             <div className="bg-slate-900 p-6 md:p-8 text-white flex justify-between items-center">
-              <h2 className="text-lg md:text-xl font-black uppercase italic tracking-tighter">Expediente Alumno</h2>
+              <div>
+                <h2 className="text-lg md:text-xl font-black uppercase italic tracking-tighter">Expediente del Alumno</h2>
+                <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Control de Matrícula</p>
+              </div>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors"><X size={20} /></button>
             </div>
             <form onSubmit={handleSave} className="p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 max-h-[70vh] overflow-y-auto custom-scrollbar text-left">
               <div className="space-y-1 col-span-full">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Nombre Estudiante</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Nombre Completo del Estudiante</label>
                 <input required value={formData.nombre_completo} onChange={e => setFormData({...formData, nombre_completo: e.target.value.toUpperCase()})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 focus:bg-white transition-all text-sm" />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Cedula Escolar/Cedula</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Cédula Escolar / C.I.</label>
                 <input required value={formData.cedula_escolar} onChange={e => setFormData({...formData, cedula_escolar: e.target.value})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 transition-all text-sm" />
               </div>
               <div className="space-y-1">
@@ -254,21 +277,24 @@ const StudentManagement: React.FC = () => {
                 </select>
               </div>
               <div className="col-span-full border-t border-slate-100 pt-4 mt-2">
-                <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest mb-4">Datos del Representante</p>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-1.5 h-1.5 bg-blue-600 rounded-full"></div>
+                  <p className="text-[9px] font-black text-blue-600 uppercase tracking-widest">Datos del Representante Legal</p>
+                </div>
               </div>
               <div className="space-y-1 col-span-full">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Nombre Representante</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Nombre del Representante</label>
                 <input value={formData.nombre_representante} onChange={e => setFormData({...formData, nombre_representante: e.target.value.toUpperCase()})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 transition-all text-sm" />
               </div>
               <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Teléfono</label>
-                <input value={formData.telefono_contacto} onChange={e => setFormData({...formData, telefono_contacto: e.target.value})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 text-sm" />
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Teléfono de Contacto</label>
+                <input value={formData.telefono_contacto} onChange={e => setFormData({...formData, telefono_contacto: e.target.value})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 text-sm" placeholder="0412-0000000" />
               </div>
               <div className="space-y-1 col-span-full">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Dirección Completa</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Dirección de Domicilio</label>
                 <textarea value={formData.direccion} onChange={e => setFormData({...formData, direccion: e.target.value.toUpperCase()})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 transition-all min-h-[80px] text-sm resize-none" />
               </div>
-              <button type="submit" className="w-full col-span-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl mt-4">Guardar Registro</button>
+              <button type="submit" className="w-full col-span-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl mt-4 border-b-4 border-blue-800 transition-all active:scale-95">Guardar Registro Institucional</button>
             </form>
           </div>
         </div>

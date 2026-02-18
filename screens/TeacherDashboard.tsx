@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { User, Student, AttendanceRecord } from '../types';
-import { BookMarked, ChevronRight, CalendarDays, Users, ClipboardCheck, Clock, Star, AlertCircle } from 'lucide-react';
+import { BookMarked, ChevronRight, CalendarDays, Users, ClipboardCheck, Clock, Star, AlertCircle, Check, X, AlertOctagon } from 'lucide-react';
 import { StorageService } from '../services/StorageService';
 
 interface TeacherDashboardProps {
@@ -16,10 +16,9 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user, onSelectGroup
 
   useEffect(() => {
     const now = new Date();
-    const day = now.getDay(); // 0: Domingo, 6: Sábado
+    const day = now.getDay(); 
     setIsWeekend(day === 0 || day === 6);
 
-    // Solo mostramos el grupo asignado al perfil del docente
     if (user.grado && user.seccion) {
       setAssignedGroup({ grado: user.grado, seccion: user.seccion });
       
@@ -40,11 +39,44 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user, onSelectGroup
     }
   }, [user]);
 
+  const attendancePercentage = todayStats.total > 0 
+    ? Math.round((todayStats.present / todayStats.total) * 100) 
+    : 0;
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700 text-left">
+      {/* Estado del sistema ahora es lo primero */}
+      <section className="bg-slate-900 rounded-[2.5rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl border-b-8 border-blue-700">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-600/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex items-center gap-5">
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+              <Clock size={32} />
+            </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-black uppercase italic tracking-tighter leading-tight">Estado del Sistema</h2>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Conexión Institucional Activa</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-4 w-full md:w-auto">
+            <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 flex-1 md:flex-none">
+              <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1">Fecha Actual</p>
+              <p className="text-xs md:text-sm font-bold capitalize">
+                {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
+            </div>
+            <div className="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 flex-1 md:flex-none">
+              <p className="text-[8px] font-black text-green-400 uppercase tracking-widest mb-1">Servidor</p>
+              <p className="text-xs md:text-sm font-bold uppercase">Operativo</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <header className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-blue-500/30 transform -rotate-2">
+          <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-blue-500/30 transform -rotate-2 shrink-0">
             <Users size={40} />
           </div>
           <div>
@@ -57,7 +89,7 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user, onSelectGroup
         
         <div className="flex items-center gap-4 w-full lg:w-auto">
           <div className="bg-slate-900 px-8 py-4 rounded-2xl text-center border-b-4 border-blue-600 flex-1 lg:flex-none">
-            <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Presentes Hoy</p>
+            <p className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-1">Asistencia Real</p>
             <p className="text-2xl font-black text-white">{todayStats.present} <span className="text-slate-500 text-sm">/ {todayStats.total}</span></p>
           </div>
         </div>
@@ -130,24 +162,6 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user, onSelectGroup
         </div>
 
         <div className="space-y-6">
-           <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl border-b-8 border-blue-700">
-             <div className="relative z-10 space-y-6">
-                <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Clock size={32} />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-tight">Estado del Sistema</h2>
-                  <p className="text-slate-400 text-sm mt-3 leading-relaxed">
-                    Mantenga la asistencia de su grupo actualizada para asegurar la precisión del análisis institucional.
-                  </p>
-                </div>
-                <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                  <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Fecha de Hoy</p>
-                  <p className="text-lg font-bold capitalize">{new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-                </div>
-             </div>
-           </div>
-
            <div className="bg-blue-50 rounded-[2.5rem] p-8 border-2 border-blue-100">
              <div className="flex items-center gap-3 mb-4">
                 <Star size={20} className="text-blue-600 fill-blue-600" />
@@ -156,6 +170,42 @@ const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ user, onSelectGroup
              <p className="text-blue-800 text-sm font-medium leading-relaxed italic">
                "Su registro permite identificar oportunamente riesgos de inasistencia y fortalecer el vínculo con el estudiante."
              </p>
+             <div className="mt-6 flex flex-col gap-2">
+                <div className="flex justify-between items-center text-[8px] font-black uppercase text-blue-400">
+                   <span>Asistencia Registrada</span>
+                   <span>{attendancePercentage}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-blue-100 rounded-full overflow-hidden">
+                   <div 
+                     className="h-full bg-blue-600 transition-all duration-1000 ease-out"
+                     style={{ width: `${attendancePercentage}%` }}
+                   ></div>
+                </div>
+             </div>
+           </div>
+
+           <div className="bg-white p-8 rounded-[2.5rem] border-2 border-slate-100 shadow-sm">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Ayuda Rápida</h4>
+              <ul className="space-y-4">
+                 <li className="flex gap-4 items-center text-xs font-bold text-slate-600">
+                    <div className="w-10 h-10 bg-green-50 text-green-600 border border-green-100 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                       <Check size={18} />
+                    </div>
+                    <span>Toque una vez para marcar presencia hoy.</span>
+                 </li>
+                 <li className="flex gap-4 items-center text-xs font-bold text-slate-600">
+                    <div className="w-10 h-10 bg-red-50 text-red-600 border border-red-100 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                       <X size={18} />
+                    </div>
+                    <span>Toque para registrar inasistencia injustificada.</span>
+                 </li>
+                 <li className="flex gap-4 items-center text-xs font-bold text-slate-600">
+                    <div className="w-10 h-10 bg-amber-50 text-amber-500 border border-amber-100 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                       <AlertOctagon size={18} />
+                    </div>
+                    <span>IJ: Para registrar inasistencias justificadas.</span>
+                 </li>
+              </ul>
            </div>
         </div>
       </div>
