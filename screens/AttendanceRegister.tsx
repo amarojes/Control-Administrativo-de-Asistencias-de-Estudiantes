@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StorageService } from '../services/StorageService';
 import { Student, AttendanceStatus, AttendanceRecord } from '../types';
-import { ArrowLeft, Save, Search, Phone, Check, X, AlertOctagon, Info, ClipboardCheck } from 'lucide-react';
+import { ArrowLeft, Save, Search, Check, X, AlertOctagon, ClipboardCheck } from 'lucide-react';
 
 interface AttendanceRegisterProps {
   grado: string;
@@ -22,7 +22,6 @@ const AttendanceRegister: React.FC<AttendanceRegisterProps> = ({ grado, seccion,
     const groupStudents = allStudents.filter(s => s.grado === grado && s.seccion === seccion);
     setStudents(groupStudents);
 
-    // Solo cargamos si ya hay un registro guardado para hoy
     const allAttendance = StorageService.getAttendance();
     const todayRecords = allAttendance.filter(r => r.fecha === today);
     const initialMap: Record<string, AttendanceStatus> = {};
@@ -93,46 +92,49 @@ const AttendanceRegister: React.FC<AttendanceRegisterProps> = ({ grado, seccion,
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {filteredStudents.map(student => (
-          <div key={student.id} className="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm flex items-center justify-between hover:border-blue-100 transition-colors">
-            <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-black transition-colors ${attendance[student.id] ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
+          <div key={student.id} className="bg-white p-6 rounded-[2.5rem] border-2 border-slate-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 hover:border-blue-200 transition-colors">
+            <div className="flex items-center gap-5">
+              <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center font-black text-xl transition-colors ${attendance[student.id] ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>
                 {student.nombre_completo[0]}
               </div>
               <div>
-                <p className="font-black text-slate-900 uppercase text-sm leading-tight">{student.nombre_completo}</p>
-                {attendance[student.id] && (
-                  <p className="text-[8px] font-black text-blue-500 uppercase tracking-widest mt-1">
+                <p className="font-black text-slate-900 uppercase text-base leading-tight">{student.nombre_completo}</p>
+                {attendance[student.id] ? (
+                  <p className={`text-[9px] font-black uppercase tracking-widest mt-1.5 px-3 py-1 rounded-full border inline-block ${
+                    attendance[student.id] === 'A' ? 'bg-green-50 text-green-600 border-green-100' : 
+                    attendance[student.id] === 'I' ? 'bg-red-50 text-red-600 border-red-100' : 
+                    'bg-amber-50 text-amber-600 border-amber-100'
+                  }`}>
                     ESTADO: {attendance[student.id] === 'A' ? 'PRESENTE' : attendance[student.id] === 'I' ? 'FALTA' : 'JUSTIFICADA'}
                   </p>
+                ) : (
+                  <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-1.5">Pendiente por marcar</p>
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-4 justify-center sm:justify-end">
                <button 
                  onClick={() => toggleStatus(student.id, 'A')} 
-                 className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex flex-col items-center justify-center transition-all border-2 ${ attendance[student.id] === 'A' ? 'bg-green-600 text-white border-green-700 shadow-lg scale-105' : 'bg-white text-slate-300 border-slate-50' }`}
-                 title="Asistencia"
+                 className={`w-20 h-20 md:w-24 md:h-24 rounded-[2rem] flex flex-col items-center justify-center transition-all border-4 ${ attendance[student.id] === 'A' ? 'bg-green-600 text-white border-green-800 shadow-xl scale-110 z-10' : 'bg-white text-slate-300 border-slate-50 hover:border-green-200 shadow-sm' }`}
                >
-                  <Check size={18} />
-                  <span className="text-[6px] font-black mt-0.5">A</span>
+                  <Check size={40} strokeWidth={3} />
+                  <span className="text-[10px] font-black mt-2 uppercase">PRESENTE</span>
                </button>
                <button 
                  onClick={() => toggleStatus(student.id, 'I')} 
-                 className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex flex-col items-center justify-center transition-all border-2 ${ attendance[student.id] === 'I' ? 'bg-red-600 text-white border-red-700 shadow-lg scale-105' : 'bg-white text-slate-300 border-slate-50' }`}
-                 title="Inasistencia"
+                 className={`w-20 h-20 md:w-24 md:h-24 rounded-[2rem] flex flex-col items-center justify-center transition-all border-4 ${ attendance[student.id] === 'I' ? 'bg-red-600 text-white border-red-800 shadow-xl scale-110 z-10' : 'bg-white text-slate-300 border-slate-50 hover:border-red-200 shadow-sm' }`}
                >
-                  <X size={18} />
-                  <span className="text-[6px] font-black mt-0.5">I</span>
+                  <X size={40} strokeWidth={3} />
+                  <span className="text-[10px] font-black mt-2 uppercase">FALTA</span>
                </button>
                <button 
                  onClick={() => toggleStatus(student.id, 'IJ')} 
-                 className={`w-11 h-11 md:w-12 md:h-12 rounded-xl flex flex-col items-center justify-center transition-all border-2 ${ attendance[student.id] === 'IJ' ? 'bg-amber-500 text-white border-amber-600 shadow-lg scale-105' : 'bg-white text-slate-300 border-slate-50' }`}
-                 title="Justificada"
+                 className={`w-20 h-20 md:w-24 md:h-24 rounded-[2rem] flex flex-col items-center justify-center transition-all border-4 ${ attendance[student.id] === 'IJ' ? 'bg-amber-500 text-white border-amber-700 shadow-xl scale-110 z-10' : 'bg-white text-slate-300 border-slate-50 hover:border-amber-200 shadow-sm' }`}
                >
-                  <AlertOctagon size={18} />
-                  <span className="text-[6px] font-black mt-0.5">IJ</span>
+                  <AlertOctagon size={40} strokeWidth={3} />
+                  <span className="text-[10px] font-black mt-2 uppercase text-center leading-none">JUSTIFICA</span>
                </button>
             </div>
           </div>
@@ -148,13 +150,12 @@ const AttendanceRegister: React.FC<AttendanceRegisterProps> = ({ grado, seccion,
       <div className="mt-12 flex flex-col items-center gap-6 animate-in slide-in-from-bottom-4">
         <div className="w-full h-px bg-slate-200"></div>
         <div className="text-center">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Fin de la lista institucional</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6">Fin de la lista de Estudiantes</p>
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="group relative bg-slate-900 hover:bg-blue-600 text-white px-20 py-6 rounded-[2rem] font-black shadow-2xl transition-all active:scale-95 disabled:bg-slate-300 flex items-center gap-4"
+            className="group relative bg-slate-900 hover:bg-blue-600 text-white px-20 py-6 rounded-[2.5rem] font-black shadow-2xl transition-all active:scale-95 disabled:bg-slate-300 flex items-center gap-4 border-b-8 border-slate-950 hover:border-blue-800"
           >
-            <div className="absolute inset-0 bg-blue-600 rounded-[2rem] scale-0 group-hover:scale-100 transition-transform -z-10"></div>
             <Save size={24} className={isSaving ? 'animate-spin' : ''} />
             <span className="uppercase text-sm tracking-[0.2em]">{isSaving ? 'PROCESANDO...' : 'GUARDAR CAMBIOS'}</span>
           </button>

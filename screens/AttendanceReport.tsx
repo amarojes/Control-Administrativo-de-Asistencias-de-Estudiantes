@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StorageService } from '../services/StorageService';
 import { Student, AttendanceRecord } from '../types';
-import { ClipboardList, ChevronLeft, ChevronRight, FileSpreadsheet, Printer, CalendarDays, AlertCircle } from 'lucide-react';
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
+import { ClipboardList, ChevronLeft, ChevronRight, FileSpreadsheet, Printer, CalendarDays } from 'lucide-react';
 
 const AttendanceReport: React.FC = () => {
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
@@ -12,6 +10,7 @@ const AttendanceReport: React.FC = () => {
   const [selectedSection, setSelectedSection] = useState<string>('');
   const [reportData, setReportData] = useState<any[]>([]);
   const [sections, setSections] = useState<string[]>([]);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [monthlyData, setMonthlyData] = useState<{
     students: Student[], 
     days: { num: number, label: string, isWeekend: boolean }[], 
@@ -90,7 +89,7 @@ const AttendanceReport: React.FC = () => {
 
   const exportCSV = () => {
     if (viewMode === 'daily' && reportData.length === 0) {
-      alert("No hay datos cargados para exportar.");
+      alert("No hay datos cargados.");
       return;
     }
     
@@ -98,7 +97,7 @@ const AttendanceReport: React.FC = () => {
     const SEP = ";"; 
 
     if (viewMode === 'daily') {
-      csvContent += "REPORTE DIARIO DE ASISTENCIA\n";
+      csvContent += "REPORTE DIARIO\n";
       csvContent += `FECHA;${reportDate}\n\n`;
       csvContent += `SECCION${SEP}MATRICULA${SEP}ASISTENCIAS${SEP}INASISTENCIAS${SEP}JUSTIFICADAS${SEP}LOGRO %\n`;
       reportData.forEach(r => {
@@ -120,12 +119,11 @@ const AttendanceReport: React.FC = () => {
       });
     }
 
-    // Blob sin BOM para evitar el símbolo ï»¿ en Excel
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `reporte_${viewMode === 'daily' ? 'diario' : 'mensual'}_${reportDate.replace(/-/g, '')}.csv`;
+    link.download = `reporte_${viewMode}_${reportDate.replace(/-/g, '')}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -133,29 +131,16 @@ const AttendanceReport: React.FC = () => {
   };
 
   const handlePrintAction = () => {
-    const element = document.getElementById('report-content');
-    if (!element) return;
-
-    const opt = {
-      margin: 10,
-      filename: `Reporte_${viewMode}_${reportDate}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
-    };
-
-    html2pdf().set(opt).from(element).save();
+    setIsPrinting(true);
+    // Disparo inmediato para evitar que el estado bloquee el proceso
+    window.print();
+    // Restaurar estado tras el diálogo de impresión
+    setTimeout(() => setIsPrinting(false), 1000);
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700 text-left">
-      <style>{`
-        @media print {
-          .no-print { display: none !important; }
-        }
-      `}</style>
-
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border-2 border-slate-100 shadow-sm no-print">
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border-2 border-slate-100 shadow-sm print:hidden no-print">
         <div className="flex items-center gap-6">
           <div className="w-12 h-12 md:w-14 md:h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl">
             <ClipboardList size={28} />
@@ -185,25 +170,29 @@ const AttendanceReport: React.FC = () => {
           </div>
           
           <div className="flex flex-col gap-2 w-full lg:w-auto">
-            <button onClick={exportCSV} className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-green-600 text-white rounded-2xl hover:bg-green-700 transition-all shadow-lg font-black text-[9px] uppercase tracking-widest border-b-4 border-green-800">
+            <button onClick={exportCSV} className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-green-600 text-white rounded-2xl hover:bg-green-700 transition-all shadow-lg font-black text-[10px] uppercase tracking-widest border-b-4 border-green-800">
               <FileSpreadsheet size={18} />
-              <span>DESCARGAR EXCEL</span>
+              <span>{viewMode === 'daily' ? 'REPORTE DIARIO EN EXCEL' : 'MATRIZ MENSUAL EN EXCEL'}</span>
             </button>
-            <button onClick={handlePrintAction} className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg font-black text-[9px] uppercase tracking-widest border-b-4 border-slate-700">
-              <Printer size={18} /> 
-              <span>GENERAR PDF</span>
+            <button 
+              onClick={handlePrintAction} 
+              disabled={isPrinting}
+              className={`w-full flex items-center justify-center gap-3 px-6 py-4 bg-red-600 text-white rounded-2xl transition-all shadow-lg font-black text-[10px] uppercase tracking-widest border-b-4 border-red-800 ${isPrinting ? 'opacity-50 cursor-wait' : 'hover:bg-red-700'}`}
+            >
+              <Printer size={18} className={isPrinting ? 'animate-pulse' : ''} /> 
+              <span>{isPrinting ? 'IMPRIMIENDO...' : (viewMode === 'daily' ? 'REPORTE DIARIO EN PDF' : 'MATRIZ MENSUAL EN PDF')}</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div id="report-content" className="report-container bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl overflow-hidden min-h-[300px] flex flex-col p-8">
-        {/* Cabecera institucional para el PDF */}
-        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-6">
+      <div id="report-content" className="bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl overflow-hidden min-h-[400px] flex flex-col p-8 md:p-12">
+        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-8">
           <div className="text-[10px] font-black uppercase leading-tight text-slate-800">
             República Bolivariana de Venezuela<br/>
             Ministerio del Poder Popular para la Educación<br/>
-            Unidad de Control Administrativo
+            Sistema de Control Administrativo de Asistencias de Estudiantes<br/>
+            Escuela "EPE MARIA INOCENCIA VILLEGAS"
           </div>
           <div className="text-right">
             <h2 className="text-xl font-black uppercase italic text-slate-900">
@@ -235,26 +224,31 @@ const AttendanceReport: React.FC = () => {
                     <td className="px-8 py-5 text-right font-black text-blue-600">{row.logro}%</td>
                   </tr>
                 ))}
+                {reportData.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-20 text-center text-slate-300 font-black uppercase italic tracking-widest text-sm">Sin datos</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse border border-slate-100">
               <thead>
                 <tr className="bg-slate-50 text-[7px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-200">
-                  <th className="px-6 py-4">Estudiante</th>
+                  <th className="px-6 py-4 border-r border-slate-200 sticky left-0 bg-slate-50 z-10">Estudiante</th>
                   {monthlyData.days.map(d => (
-                    <th key={d.num} className={`px-1 py-4 text-center ${d.isWeekend ? 'bg-slate-100' : ''}`}>{d.num}</th>
+                    <th key={d.num} className={`px-1 py-4 text-center border-r border-slate-100 ${d.isWeekend ? 'bg-slate-100/50' : ''}`}>{d.num}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {monthlyData.students.map(s => (
                   <tr key={s.id} className="text-[8px]">
-                    <td className="px-6 py-2 font-black text-slate-900 uppercase truncate">{s.nombre_completo}</td>
+                    <td className="px-6 py-2 font-black text-slate-900 uppercase truncate border-r border-slate-200 sticky left-0 bg-white z-10">{s.nombre_completo}</td>
                     {monthlyData.days.map(d => (
-                      <td key={d.num} className="p-0 text-center border-r border-slate-50">
+                      <td key={d.num} className={`p-0 text-center border-r border-slate-50 font-bold ${monthlyData.records[`${s.id}-${d.num}`] === 'I' ? 'text-red-500 bg-red-50/30' : monthlyData.records[`${s.id}-${d.num}`] === 'A' ? 'text-green-600' : ''}`}>
                         {monthlyData.records[`${s.id}-${d.num}`] || '-'}
                       </td>
                     ))}
@@ -265,19 +259,14 @@ const AttendanceReport: React.FC = () => {
           </div>
         )}
 
-        <div className="mt-12 flex justify-between items-end px-10 pt-10 border-t border-slate-100">
+        <div className="mt-auto flex justify-between items-end px-10 pt-16">
           <div className="text-center">
             <div className="w-48 border-t-2 border-slate-900 mb-2"></div>
             <p className="text-[9px] font-black uppercase text-slate-900">Firma del Docente</p>
           </div>
           <div className="text-center">
-            <div className="w-32 h-32 border-4 border-dashed border-slate-200 rounded-full flex items-center justify-center mb-2">
-              <p className="text-[8px] font-black text-slate-300 uppercase rotate-12">Sello del Plantel</p>
-            </div>
-          </div>
-          <div className="text-center">
             <div className="w-48 border-t-2 border-slate-900 mb-2"></div>
-            <p className="text-[9px] font-black uppercase text-slate-900">Control de Estudios</p>
+            <p className="text-[9px] font-black uppercase text-slate-900">Firma del Director</p>
           </div>
         </div>
       </div>

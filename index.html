@@ -10,22 +10,41 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         
-        /* Estilos base para la impresión nativa como respaldo */
+        /* ESTILOS PROFESIONALES DE IMPRESIÓN */
         @media print {
-            html, body { 
-                height: auto !important; 
-                overflow: visible !important; 
-                background: white !important; 
-                margin: 0 !important; 
-                padding: 0 !important;
-                width: 100% !important;
-            }
-            nav, aside, button, .no-print, header { 
-                display: none !important; 
-            }
             @page { 
                 size: landscape; 
-                margin: 1cm; 
+                margin: 0.5cm; 
+            }
+            body { 
+                background: white !important; 
+                color: black !important;
+            }
+            /* Ocultar todo lo que no sea el reporte */
+            #root > div > aside,
+            #root > div > div.md\:hidden,
+            header.print\:hidden,
+            .no-print,
+            button,
+            nav { 
+                display: none !important; 
+            }
+            /* Expandir el contenido del reporte */
+            main {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            #report-content {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            .report-container {
+                width: 100% !important;
+                max-width: none !important;
             }
         }
     </style>
@@ -39,8 +58,7 @@
     "lucide-react": "https://esm.sh/lucide-react@^0.564.0",
     "recharts": "https://esm.sh/recharts@^3.7.0",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "html2pdf.js": "https://esm.sh/html2pdf.js@0.10.1"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
   }
 }
 </script>
