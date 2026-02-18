@@ -2,11 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StorageService } from '../services/StorageService';
 import { User, Role } from '../types';
-import { 
-  Plus, UserPlus, Trash2, Edit2, Check, X, Shield, KeyRound, 
-  Lock, UserCircle, BookOpen, AlertCircle, ShieldCheck, ShieldAlert,
-  LockKeyhole, Eye, EyeOff
-} from 'lucide-react';
+import { UserPlus, Trash2, Edit2, Check, X, Shield, Lock, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -27,8 +23,12 @@ const UserManagement: React.FC = () => {
     activo: true
   });
 
-  useEffect(() => {
+  const refreshUsers = () => {
     setUsers(StorageService.getUsers());
+  };
+
+  useEffect(() => {
+    refreshUsers();
     const session = JSON.parse(localStorage.getItem('asistencia_session') || '{}');
     setCurrentUser(session);
   }, []);
@@ -38,7 +38,7 @@ const UserManagement: React.FC = () => {
   const handleOpenModal = (user?: User) => {
     setShowPassword(false);
     if (user && user.rol === 'administrador' && !isMasterAdmin && user.id !== currentUser?.id) {
-      alert("No tiene permisos para modificar cuentas de nivel administrativo.");
+      alert("No tiene permisos para modificar cuentas administrativas.");
       return;
     }
 
@@ -79,7 +79,7 @@ const UserManagement: React.FC = () => {
       rol: editingUser?.id === 'admin-1' ? 'administrador' : finalRole
     };
     StorageService.saveUser(newUser);
-    setUsers(StorageService.getUsers());
+    refreshUsers();
     setIsModalOpen(false);
     setShowSuccess(true);
     setTimeout(() => setShowSuccess(false), 3000);
@@ -90,9 +90,9 @@ const UserManagement: React.FC = () => {
       alert("La cuenta maestra no puede ser eliminada.");
       return;
     }
-    if (confirm('¿Está seguro de eliminar a este miembro del personal? Esta acción es irreversible.')) {
+    if (window.confirm('¿Está seguro de eliminar a este miembro del personal?')) {
       StorageService.deleteUser(id);
-      setUsers(StorageService.getUsers());
+      refreshUsers();
     }
   };
 
@@ -100,7 +100,7 @@ const UserManagement: React.FC = () => {
     if (user.id === 'admin-1') return;
     const updated = { ...user, activo: !user.activo };
     StorageService.saveUser(updated);
-    setUsers(StorageService.getUsers());
+    refreshUsers();
   };
 
   return (
@@ -117,12 +117,8 @@ const UserManagement: React.FC = () => {
             <p className="text-slate-500 font-bold uppercase text-[8px] md:text-[10px] tracking-widest mt-2">Personal Institucional Registrado</p>
           </div>
         </div>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl uppercase text-[10px] tracking-widest transition-all"
-        >
-          <UserPlus size={18} />
-          Registrar Personal
+        <button onClick={() => handleOpenModal()} className="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white px-8 py-4 rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl uppercase text-[10px] tracking-widest transition-all">
+          <UserPlus size={18} /> Registrar Personal
         </button>
       </header>
 
@@ -137,10 +133,10 @@ const UserManagement: React.FC = () => {
           <thead className="bg-slate-900 text-[9px] font-black text-blue-400 uppercase tracking-widest">
             <tr>
               <th className="px-8 py-6 text-left">Personal</th>
-              <th className="px-8 py-6 text-left">Nivel / Cargo</th>
-              <th className="px-8 py-6 text-left">Acceso</th>
+              <th className="px-8 py-6 text-left">Rol</th>
+              <th className="px-8 py-6 text-left">Usuario</th>
               <th className="px-8 py-6 text-center">Estatus</th>
-              <th className="px-8 py-6 text-right">Acciones</th>
+              <th className="px-8 py-6 text-right">Gestión</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -149,55 +145,28 @@ const UserManagement: React.FC = () => {
               return (
                 <tr key={user.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shrink-0 ${isThisUserMaster ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>
-                        {user.nombre[0]}{user.apellido[0]}
-                      </div>
-                      <div>
-                        <p className="font-black text-slate-900 uppercase text-sm leading-none">{user.nombre} {user.apellido}</p>
-                        <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-1">ID: {user.id.substring(0,8)}</p>
-                      </div>
-                    </div>
+                    <p className="font-black text-slate-900 uppercase text-sm leading-none">{user.nombre} {user.apellido}</p>
                   </td>
                   <td className="px-8 py-6">
-                    <div className="flex flex-wrap gap-2 items-center">
-                      <span className={`px-3 py-1 rounded-lg font-black text-[9px] uppercase tracking-tighter ${user.rol === 'administrador' ? 'bg-purple-100 text-purple-700 border border-purple-200' : 'bg-blue-100 text-blue-700 border border-blue-200'}`}>
-                        {isThisUserMaster ? 'CONTROL TOTAL' : user.rol}
-                      </span>
-                      {user.rol === 'docente' && (
-                        <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg font-black text-[9px] border border-slate-200">
-                          {user.grado}° "{user.seccion}"
-                        </span>
-                      )}
-                    </div>
+                    <span className="px-3 py-1 rounded-lg font-black text-[9px] uppercase tracking-tighter bg-blue-100 text-blue-700">
+                      {user.rol}
+                    </span>
                   </td>
                   <td className="px-8 py-6">
-                    <span className="text-[10px] font-mono font-bold text-slate-500 bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">@{user.usuario}</span>
+                    <span className="text-[10px] font-mono font-bold text-slate-500">@{user.usuario}</span>
                   </td>
                   <td className="px-8 py-6 text-center">
-                    <button 
-                      disabled={isThisUserMaster}
-                      onClick={() => toggleStatus(user)}
-                      className={`text-[8px] font-black uppercase px-4 py-1.5 rounded-full border-2 transition-all ${user.activo ? 'bg-green-50 border-green-100 text-green-700' : 'bg-red-50 border-red-100 text-red-700'}`}
-                    >
+                    <button disabled={isThisUserMaster} onClick={() => toggleStatus(user)} className={`text-[8px] font-black uppercase px-4 py-1.5 rounded-full border-2 ${user.activo ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
                       {user.activo ? 'Activo' : 'Suspendido'}
                     </button>
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-3">
-                      <button 
-                        onClick={() => handleOpenModal(user)} 
-                        className="p-2.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-xl transition-all shadow-sm flex items-center justify-center border border-blue-100"
-                        title="Editar Usuario"
-                      >
+                      <button onClick={() => handleOpenModal(user)} className="p-2.5 text-blue-600 bg-blue-50 rounded-xl">
                         <Edit2 size={16} />
                       </button>
-                      {!isThisUserMaster && isMasterAdmin && (
-                        <button 
-                          onClick={() => handleDelete(user.id)}
-                          className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-all shadow-sm flex items-center justify-center border border-red-100"
-                          title="Eliminar Usuario"
-                        >
+                      {!isThisUserMaster && (
+                        <button onClick={() => handleDelete(user.id)} className="p-2.5 text-red-600 bg-red-50 rounded-xl">
                           <Trash2 size={16} />
                         </button>
                       )}
@@ -215,81 +184,24 @@ const UserManagement: React.FC = () => {
           <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-2xl border-4 border-white overflow-hidden animate-in zoom-in-95">
             <div className="bg-slate-900 p-8 text-white flex justify-between items-start">
               <div>
-                <h2 className="text-2xl font-black uppercase italic leading-tight">
-                  {editingUser ? 'Actualizar Ficha' : 'Nuevo Personal'}
-                </h2>
-                <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mt-1">Control Administrativo Institucional</p>
+                <h2 className="text-2xl font-black uppercase italic leading-tight">Ficha Personal</h2>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="p-2 bg-white/10 rounded-xl"><X size={20} /></button>
             </div>
-            <form onSubmit={handleSave} className="p-8 space-y-5 max-h-[70vh] overflow-y-auto">
+            <form onSubmit={handleSave} className="p-8 space-y-5">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Nombre</label>
-                  <input required value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value.toUpperCase()})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 focus:bg-white transition-all text-sm" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Apellido</label>
-                  <input required value={formData.apellido} onChange={e => setFormData({...formData, apellido: e.target.value.toUpperCase()})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 focus:bg-white transition-all text-sm" />
-                </div>
+                <input required placeholder="Nombre" value={formData.nombre} onChange={e => setFormData({...formData, nombre: e.target.value.toUpperCase()})} className="px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 text-sm" />
+                <input required placeholder="Apellido" value={formData.apellido} onChange={e => setFormData({...formData, apellido: e.target.value.toUpperCase()})} className="px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 text-sm" />
               </div>
-
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Usuario de Acceso</label>
-                <input required value={formData.usuario} onChange={e => setFormData({...formData, usuario: e.target.value.toLowerCase()})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none focus:border-blue-600 focus:bg-white transition-all text-sm" />
+              <input required placeholder="Usuario" value={formData.usuario} onChange={e => setFormData({...formData, usuario: e.target.value.toLowerCase()})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none focus:border-blue-600 text-sm" />
+              <div className="relative">
+                <input required type={showPassword ? "text" : "password"} value={formData.contraseña} onChange={e => setFormData({...formData, contraseña: e.target.value})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none focus:border-blue-600 text-sm" placeholder="Clave" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
-
-              <div className="space-y-1">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Clave</label>
-                <div className="relative">
-                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                   <input 
-                     required 
-                     type={showPassword ? "text" : "password"} 
-                     value={formData.contraseña} 
-                     onChange={e => setFormData({...formData, contraseña: e.target.value})} 
-                     className="w-full pl-12 pr-12 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-bold outline-none focus:border-blue-600 focus:bg-white transition-all text-sm" 
-                     placeholder="••••••••" 
-                   />
-                   <button 
-                     type="button"
-                     onClick={() => setShowPassword(!showPassword)}
-                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors"
-                   >
-                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                   </button>
-                </div>
-              </div>
-
-              {isMasterAdmin && editingUser?.id !== 'admin-1' && (
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Rol Administrativo</label>
-                  <select value={formData.rol} onChange={e => setFormData({...formData, rol: e.target.value as Role})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 text-sm">
-                    <option value="docente">DOCENTE</option>
-                    <option value="administrador">ADMINISTRADOR</option>
-                  </select>
-                </div>
-              )}
-
-              {formData.rol === 'docente' && (
-                <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Grado</label>
-                    <select value={formData.grado} onChange={e => setFormData({...formData, grado: e.target.value})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 text-sm">
-                      {['1','2','3','4','5','6'].map(g => <option key={g} value={g}>{g}° Grado</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Sección</label>
-                    <select value={formData.seccion} onChange={e => setFormData({...formData, seccion: e.target.value})} className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 bg-slate-50 font-black outline-none focus:border-blue-600 text-sm">
-                      {['A','B','C','D'].map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl mt-4 border-b-4 border-blue-800 transition-all active:scale-95">
-                {editingUser ? 'Guardar Cambios' : 'Registrar Personal'}
+              <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl border-b-4 border-blue-800">
+                Guardar Cambios
               </button>
             </form>
           </div>
