@@ -10,7 +10,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
         
-        /* FIX DEFINITIVO PARA IMPRESIÓN */
+        /* Estilos base para la impresión nativa como respaldo */
         @media print {
             html, body { 
                 height: auto !important; 
@@ -19,15 +19,8 @@
                 margin: 0 !important; 
                 padding: 0 !important;
                 width: 100% !important;
-                position: relative !important;
             }
-            #root, main, div { 
-                height: auto !important; 
-                overflow: visible !important; 
-                position: static !important; 
-                display: block !important;
-            }
-            nav, aside, button, .no-print, header, .mobile-nav { 
+            nav, aside, button, .no-print, header { 
                 display: none !important; 
             }
             @page { 
@@ -46,7 +39,8 @@
     "lucide-react": "https://esm.sh/lucide-react@^0.564.0",
     "recharts": "https://esm.sh/recharts@^3.7.0",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "html2pdf.js": "https://esm.sh/html2pdf.js@0.10.1"
   }
 }
 </script>

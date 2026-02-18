@@ -63,8 +63,8 @@ const StudentManagement: React.FC = () => {
     const example = "\nJUAN ARMANDO PEREZ;11512345678;M;1;A;PEDRO PEREZ;04120000000;AV. BOLIVAR SECTOR 1" + 
                     "\nMARIA VALENTINA RIVAS;30123456;F;2;B;ELENA RIVAS;04241112233;CALLE PAEZ CASA 5";
     
-    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const blob = new Blob([bom, headers + example], { type: 'text/csv;charset=utf-8;' });
+    // Eliminado el BOM (Uint8Array) para evitar símbolos como ï»¿
+    const blob = new Blob([headers + example], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
@@ -72,6 +72,7 @@ const StudentManagement: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {

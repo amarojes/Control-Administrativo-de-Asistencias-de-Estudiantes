@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { StorageService } from '../services/StorageService';
 import { Student, AttendanceRecord } from '../types';
 import { ClipboardList, ChevronLeft, ChevronRight, FileSpreadsheet, Printer, CalendarDays, AlertCircle } from 'lucide-react';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
 
 const AttendanceReport: React.FC = () => {
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
@@ -88,7 +90,7 @@ const AttendanceReport: React.FC = () => {
 
   const exportCSV = () => {
     if (viewMode === 'daily' && reportData.length === 0) {
-      alert("No hay datos cargados para exportar en esta fecha.");
+      alert("No hay datos cargados para exportar.");
       return;
     }
     
@@ -118,7 +120,7 @@ const AttendanceReport: React.FC = () => {
       });
     }
 
-    // Exportación sin BOM para evitar símbolos extraños como ï»¿
+    // Blob sin BOM para evitar el símbolo ï»¿ en Excel
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -131,79 +133,27 @@ const AttendanceReport: React.FC = () => {
   };
 
   const handlePrintAction = () => {
-    // Aseguramos foco y pequeño retardo para que el DOM esté listo
-    window.focus();
-    setTimeout(() => {
-        window.print();
-    }, 250);
+    const element = document.getElementById('report-content');
+    if (!element) return;
+
+    const opt = {
+      margin: 10,
+      filename: `Reporte_${viewMode}_${reportDate}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    };
+
+    html2pdf().set(opt).from(element).save();
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-700 text-left">
       <style>{`
         @media print {
-          html, body { 
-            height: auto !important; 
-            overflow: visible !important; 
-            width: 100% !important; 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            background: white !important; 
-          }
-          #root, main { 
-            height: auto !important; 
-            overflow: visible !important; 
-            position: static !important; 
-            display: block !important; 
-          }
-          .report-container { 
-            display: block !important; 
-            overflow: visible !important; 
-            width: 100% !important; 
-            border: 1px solid #000 !important; 
-            border-radius: 0 !important; 
-          }
-          table { 
-            width: 100% !important; 
-            border-collapse: collapse !important; 
-            font-size: 9pt !important; 
-            color: #000 !important; 
-          }
-          th, td { 
-            border: 1px solid #000 !important; 
-            padding: 6px !important; 
-            background: transparent !important; 
-            color: #000 !important; 
-          }
-          .print-header { 
-            display: flex !important; 
-            margin-bottom: 20px !important; 
-            width: 100% !important; 
-          }
-          .no-print, header, nav, aside, button { 
-            display: none !important; 
-          }
-          @page { 
-            size: landscape; 
-            margin: 1.5cm; 
-          }
+          .no-print { display: none !important; }
         }
-        .print-header { display: none; }
       `}</style>
-
-      <div className="print-header flex items-center justify-between border-b-2 border-black pb-4 mb-6">
-        <div className="text-[10px] font-bold uppercase leading-tight">
-          República Bolivariana de Venezuela<br/>
-          Ministerio del Poder Popular para la Educación<br/>
-          Control Administrativo Institucional
-        </div>
-        <div className="text-right">
-          <h1 className="text-lg font-black uppercase italic text-slate-900">
-            {viewMode === 'daily' ? 'Reporte Diario de Asistencia' : 'Matriz de Control Mensual'}
-          </h1>
-          <p className="text-[10px] font-black uppercase text-blue-600">Fecha: {reportDate}</p>
-        </div>
-      </div>
 
       <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-white p-6 md:p-8 rounded-[2rem] border-2 border-slate-100 shadow-sm no-print">
         <div className="flex items-center gap-6">
@@ -241,23 +191,34 @@ const AttendanceReport: React.FC = () => {
             </button>
             <button onClick={handlePrintAction} className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-slate-900 text-white rounded-2xl hover:bg-slate-800 transition-all shadow-lg font-black text-[9px] uppercase tracking-widest border-b-4 border-slate-700">
               <Printer size={18} /> 
-              <span>IMPRIMIR REPORTE</span>
+              <span>GENERAR PDF</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="report-container bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl overflow-hidden min-h-[300px] flex flex-col">
+      <div id="report-content" className="report-container bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl overflow-hidden min-h-[300px] flex flex-col p-8">
+        {/* Cabecera institucional para el PDF */}
+        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-6">
+          <div className="text-[10px] font-black uppercase leading-tight text-slate-800">
+            República Bolivariana de Venezuela<br/>
+            Ministerio del Poder Popular para la Educación<br/>
+            Unidad de Control Administrativo
+          </div>
+          <div className="text-right">
+            <h2 className="text-xl font-black uppercase italic text-slate-900">
+              {viewMode === 'daily' ? 'Reporte Diario de Asistencia' : 'Matriz Mensual de Control'}
+            </h2>
+            <p className="text-[10px] font-black uppercase text-blue-600">Fecha de Emisión: {reportDate}</p>
+          </div>
+        </div>
+
         {viewMode === 'daily' ? (
           <div className="overflow-x-auto">
-            <div className="bg-slate-900 p-6 no-print flex justify-between items-center text-white">
-              <h2 className="text-lg font-black uppercase italic tracking-tighter">Consolidado Diario de Asistencia</h2>
-              <span className="bg-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">{reportDate}</span>
-            </div>
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                  <th className="px-8 py-5">Sección Escolar</th>
+                  <th className="px-8 py-5">Sección</th>
                   <th className="px-6 py-5 text-center">Matrícula</th>
                   <th className="px-4 py-5 text-center text-green-600">Presentes</th>
                   <th className="px-4 py-5 text-center text-red-600">Inasistentes</th>
@@ -266,7 +227,7 @@ const AttendanceReport: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {reportData.map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/50">
+                  <tr key={idx}>
                     <td className="px-8 py-5 text-sm font-black text-slate-900 uppercase italic">{row.seccion}</td>
                     <td className="px-6 py-5 text-center font-bold text-slate-600">{row.matricula}</td>
                     <td className="px-4 py-5 text-center font-bold text-green-600">{row.asistencia}</td>
@@ -279,13 +240,10 @@ const AttendanceReport: React.FC = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <div className="bg-slate-900 p-6 no-print text-white">
-              <h2 className="text-lg font-black uppercase italic tracking-tighter">Matriz de Control Mensual de Asistencia</h2>
-            </div>
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-[7px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-200">
-                  <th className="px-6 py-4 sticky left-0 bg-slate-50 z-10 w-64 print:static">Nombre del Estudiante</th>
+                  <th className="px-6 py-4">Estudiante</th>
                   {monthlyData.days.map(d => (
                     <th key={d.num} className={`px-1 py-4 text-center ${d.isWeekend ? 'bg-slate-100' : ''}`}>{d.num}</th>
                   ))}
@@ -293,8 +251,8 @@ const AttendanceReport: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {monthlyData.students.map(s => (
-                  <tr key={s.id} className="hover:bg-slate-50 transition-colors text-[8px]">
-                    <td className="px-6 py-2 sticky left-0 bg-white font-black text-slate-900 uppercase truncate print:static">{s.nombre_completo}</td>
+                  <tr key={s.id} className="text-[8px]">
+                    <td className="px-6 py-2 font-black text-slate-900 uppercase truncate">{s.nombre_completo}</td>
                     {monthlyData.days.map(d => (
                       <td key={d.num} className="p-0 text-center border-r border-slate-50">
                         {monthlyData.records[`${s.id}-${d.num}`] || '-'}
@@ -306,13 +264,21 @@ const AttendanceReport: React.FC = () => {
             </table>
           </div>
         )}
-      </div>
 
-      <div className="p-12 print:block hidden border-t-2 border-black mt-16 text-center">
-        <div className="grid grid-cols-3 gap-20">
-           <div className="border-t border-black pt-2 text-[10px] font-black uppercase">Firma del Docente</div>
-           <div className="w-24 h-24 border-2 border-black border-dashed rounded-full flex items-center justify-center mx-auto text-[7px] font-black uppercase">Sello Plantel</div>
-           <div className="border-t border-black pt-2 text-[10px] font-black uppercase">Dirección / Sello</div>
+        <div className="mt-12 flex justify-between items-end px-10 pt-10 border-t border-slate-100">
+          <div className="text-center">
+            <div className="w-48 border-t-2 border-slate-900 mb-2"></div>
+            <p className="text-[9px] font-black uppercase text-slate-900">Firma del Docente</p>
+          </div>
+          <div className="text-center">
+            <div className="w-32 h-32 border-4 border-dashed border-slate-200 rounded-full flex items-center justify-center mb-2">
+              <p className="text-[8px] font-black text-slate-300 uppercase rotate-12">Sello del Plantel</p>
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="w-48 border-t-2 border-slate-900 mb-2"></div>
+            <p className="text-[9px] font-black uppercase text-slate-900">Control de Estudios</p>
+          </div>
         </div>
       </div>
     </div>
